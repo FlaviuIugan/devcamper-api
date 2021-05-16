@@ -1,6 +1,8 @@
 const ErrorResponse = require("../utils/errorResponse");
+const geocoder = require("../utils/geocoder");
 const Bootcamp = require("../models/Bootcamp");
-const asyncHandler = require("../middleware/async")
+const asyncHandler = require("../middleware/async");
+
 
 
 // Get all bootcamps
@@ -8,7 +10,41 @@ const asyncHandler = require("../middleware/async")
 // Public
 exports.getBootcamps = asyncHandler(  async(req,res,next) => {
 
-    const bootcamps = await Bootcamp.find();
+    let query;
+
+    const reqQuery = { ...req.query};
+
+    // FIELDS TO EXCLUDE FOR MATCH
+
+    const removeFields = ["select", "sort"];
+
+    removeFields.forEach( param => delete reqQuery);
+
+
+
+    let queryStr = JSON.stringify(reqQuery);
+
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match =>`$${match}`);
+
+    query = Bootcamp.find(JSON.parse(queryStr));
+
+    // SELECT FIELDS
+
+    if(req.query.select){
+      const fields = req.query.select.split(",").join(" ");
+      query = query.select(fields);
+    }
+
+    if(req.query.sort){
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
+    }else{
+      query = query.sort("-createdAt");
+    }
+
+    const bootcamps = await query;
+
+
     
     res.status(200).json({succes:true,count:bootcamps.length, data: bootcamps});
   
@@ -72,5 +108,28 @@ exports.deleteBootcamp = asyncHandler( async(req,res,next) => {
     }
 
     res.status(400).json({succes:true, data:{}});
+
+});
+
+// Get bootcamps within a radius
+// Get  api/v1/bootcamps/radius/:zipcode/:distance
+// Private
+
+exports.getBootcampsInRadius = asyncHandler( async(req,res,next) => {
+
+  const {zipcode,distance} = req.params;
+
+  //GET LAT/LNG from geocoder
+  const loc = await geocoder.geocode(zipcode);
+  const lat = loc[0].latitude;
+  const lng = loc[0].longitude;
+
+  const radius = distance / 3963;
+
+  const bootcamps = await Bootcamp.find({
+    location:{ $geoWithin: {$centerSphere: [[ lng, lat], radius]}}
+  });
+
+  res.status(200).json({succes: true, count: bootcamps.length,data: bootcamps});
 
 });
