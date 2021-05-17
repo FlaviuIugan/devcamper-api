@@ -9,6 +9,8 @@ const connectDB = require("./config/db.js");
 
 const PORT = process.env.PORT || 3000;
 const bootcamps = require("./routes/bootcamps");
+const courses = require("./routes/courses");
+
 
 connectDB();
 
@@ -22,7 +24,7 @@ if (process.env.NODE_ENV === "development") {
 
 
 app.use("/api/v1/bootcamps", bootcamps);
-
+app.use("/api/v1/courses", courses);
 
 
 app.use(errorHandler);
