@@ -9,6 +9,7 @@ const advancedResults = require("../middleware/advancedResults");
 
 
 const courseRouter = require("./courses");
+const reviewRouter = require("./reviews");
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ const router = express.Router();
 // Re-route int other resourse router;
 
 router.use("/:bootcampId/courses", courseRouter);
+router.use("/:bootcampId/reviews", reviewRouter);
 
 
 router.route("/:id/photo").put(protect,authorize("publisher","admin"), bootcampPhotoUpload);

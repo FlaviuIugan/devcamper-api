@@ -6,7 +6,7 @@ const Course = require("../models/Course");
 
 // Get all course
 // api/v1/courses
-// api/v1/bootcamps/:bootcampId/courses
+// api/v1/bootcamps
 // Public
 
 exports.getCourses = asyncHandler( async (req,res,next) => {
@@ -23,8 +23,6 @@ exports.getCourses = asyncHandler( async (req,res,next) => {
 
   const courses = await query;
 
-
-  
   res.status(200).json({succes:true, count:courses.length, data: courses});
 });
 
