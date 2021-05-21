@@ -1,5 +1,6 @@
 const express = require("express");
 const http = require("http");
+const mongoSanitize = require("express-mongo-sanitize");
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config/config.env" });
 const colors = require("colors");
@@ -11,7 +12,12 @@ const cookieParser = require("cookie-parser");
 const path = require("path");
 const auth = require("./routes/auth");
 const users = require("./routes/users");
-const reviews = require("./routes/reviews")
+const reviews = require("./routes/reviews");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const cors = require("cors");
+const hpp = require("hpp");
+const xss = require("xss-clean");
 const PORT = process.env.PORT || 3000;
 const bootcamps = require("./routes/bootcamps");
 const courses = require("./routes/courses");
@@ -29,6 +35,19 @@ app.use(cookieParser());
 //File upload
 
 app.use(fileupload());
+app.use(mongoSanitize());
+app.use(helmet());
+app.use(xss());
+app.use(cors());
+
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 100
+});
+
+app.use(limiter);
+
+app.use(hpp());
 
 app.use(express.static(path.join(__dirname, "public")));
 
